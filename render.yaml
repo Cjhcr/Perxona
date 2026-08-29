@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: intaiview-perxona
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install
+    startCommand: node server.mjs
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: PERXONA_API_BASE_URL
+        value: https://console.perxona.ai/asia
+      - key: PERXONA_CONNECT_SECRET_KEY
+        sync: false
+      - key: PERXONA_CONNECT_PUBLISHABLE_KEY
+        sync: false
+      - key: PRESENTER_URL
+        value: https://cdn.perxona.ai/asia/prod/latest/widget/entry/presenter.js
+      - key: DEMO_FIXED_AVATAR_ID
+        value: 01KERKJ6MFHPYY1X0GS7J3MX18
+      - key: DEMO_FIXED_SCENE_ID
+        value: 01KWVBXE9Q9CZ9FENATQHZYXJV
+      - key: DEMO_FIXED_VOICE_ID
+        value: 01KVAGZWYB22WP19M8M5Z7SKRG
+      - key: DEMO_FIXED_CHATBOT_ID
+        value: 01M15PZSM33DH1GE5HE01N086K

@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  intaiview:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: intaiview:latest
+    container_name: intaiview-service
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      - PORT=8083
+      - NODE_ENV=production
+      - PERXONA_API_BASE_URL=https://console.perxona.ai/asia
+      - PERXONA_CONNECT_SECRET_KEY=${PERXONA_CONNECT_SECRET_KEY:-pxc_01M16AH3KW35AXDAJVD9RDM0P9_KnYm2bCG5yA4xhmfnCQmcxuopoCMFkGTKa59-6zJCS0}
+      - PERXONA_CONNECT_PUBLISHABLE_KEY=${PERXONA_CONNECT_PUBLISHABLE_KEY:-pxc_01M16A67VRR52FFY5QQGMWTJH2_K30UY1m9l5KzjGoQd4eEHduRqxG2u0FW06PrZkMBu54}
+      - DEMO_FIXED_AVATAR_ID=01KERKJ6MFHPYY1X0GS7J3MX18
+      - DEMO_FIXED_SCENE_ID=01KWVBXE9Q9CZ9FENATQHZYXJV
+      - DEMO_FIXED_VOICE_ID=01KVAGZWYB22WP19M8M5Z7SKRG
+      - DEMO_FIXED_CHATBOT_ID=01M15PZSM33DH1GE5HE01N086K
+      - PRESENTER_URL=https://cdn.perxona.ai/asia/prod/latest/widget/entry/presenter.js
+      - TRUST_PROXY_HOPS=1
+    env_file:
+      - .env
