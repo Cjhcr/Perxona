@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IntAIview · AI Interview Practice</title>
+    <!-- PDF.js CDN for client-side PDF resume parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="../../styles/apple-theme.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body class="meet-app">
+    <!-- Stage 1–3: profile center, upload wizard, and practice history -->
+    <section id="profile-center" class="workflow-screen profile-center-screen">
+      <header class="workflow-topbar">
+        <div>
+          <a class="brand-lockup brand-home" href="/demos/embed/" aria-label="返回 IntAIview 主頁"><span class="brand-word">Int<span>AI</span>view</span><span class="brand-powered">Powered by Perxona</span></a>
+          <h1>誰要開始練習？</h1>
+          <p>面試前的第一個擁抱，先給你勇氣，再陪你上戰場。</p>
+        </div>
+        <button id="btn-new-profile" class="workflow-primary" type="button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>建立新檔案</button>
+      </header>
+      <div id="quick-continue" class="quick-continue-card" hidden></div>
+      <div id="profile-grid" class="profile-grid" aria-live="polite"></div>
+    </section>
+
+    <section id="profile-wizard" class="workflow-screen wizard-screen" hidden>
+      <header class="workflow-topbar compact">
+        <div>
+          <button id="btn-wizard-back" class="workflow-link" type="button">返回個人資料中心</button>
+          <a class="brand-lockup brand-home" href="/demos/embed/" aria-label="返回 IntAIview 主頁"><span class="brand-word">Int<span>AI</span>view</span><span class="brand-powered">Powered by Perxona</span></a>
+          <h1 id="wizard-title">讓 AI 先認識你</h1>
+        </div>
+        <span id="wizard-step-count" class="wizard-step-count">1 / 5</span>
+      </header>
+      <div class="wizard-layout">
+        <nav id="wizard-steps" class="wizard-step-nav" aria-label="建立個人檔案步驟"></nav>
+        <form id="profile-wizard-form" class="wizard-card">
+          <div class="wizard-profile-basics">
+            <label>姓名<input id="wizard-name" class="meet-input" required placeholder="例如：陳怡君" /></label>
+            <label>目標產業<input id="wizard-industry" class="meet-input" required placeholder="例如：軟體與科技" /></label>
+          </div>
+          <div id="wizard-pane" class="wizard-pane"></div>
+          <div class="wizard-actions">
+            <button id="btn-wizard-prev" class="workflow-secondary" type="button">上一步</button>
+            <button id="btn-wizard-skip" class="workflow-link" type="button">略過這一步</button>
+            <button id="btn-wizard-next" class="workflow-primary" type="button">下一步</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section id="history-screen" class="workflow-screen history-screen" hidden>
+      <header class="workflow-topbar compact">
+        <div>
+          <button id="btn-history-back" class="workflow-link" type="button">切換個人檔案</button>
+          <a class="brand-lockup brand-home" href="/demos/embed/" aria-label="返回 IntAIview 主頁"><span class="brand-word">Int<span>AI</span>view</span><span class="brand-powered">Powered by Perxona</span></a>
+          <h1 id="history-profile-name">你的面試旅程</h1>
+          <p id="history-encouragement"></p>
+        </div>
+        <button id="btn-start-practice" class="workflow-primary" type="button">開始新的模擬面試</button>
+      </header>
+      <div class="history-toolbar">
+        <div class="history-filter-group">
+          <select id="history-level-filter" class="meet-select" aria-label="依級別篩選">
+            <option value="all">所有級別</option>
+            <option value="Level 1">Level 1 初篩</option>
+            <option value="Level 2">Level 2 招募經理</option>
+            <option value="Level 3">Level 3 小組面試</option>
+            <option value="Level 4">Level 4 高階主管</option>
+          </select>
+          <select id="history-sort" class="meet-select" aria-label="排序方式">
+            <option value="newest">日期：最新優先</option>
+            <option value="score">評分：最高優先</option>
+          </select>
+        </div>
+        <div class="view-switch" role="group" aria-label="顯示模式">
+          <button class="active" data-history-view="list" type="button">列表</button>
+          <button data-history-view="grid" type="button">縮圖</button>
+        </div>
+      </div>
+      <div class="history-workspace">
+        <div class="history-main">
+          <div class="progress-card">
+            <div><span class="workflow-eyebrow">進步軌跡</span><strong id="progress-summary">尚未有評分</strong></div>
+            <svg id="progress-chart" viewBox="0 0 640 120" role="img" aria-label="歷次面試評分折線圖"></svg>
+          </div>
+          <div id="history-list" class="history-list"></div>
+        </div>
+        <aside id="history-preview" class="history-preview">
+          <div class="history-empty-preview">選擇一筆紀錄，查看優點與待改進項目。</div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         1. Google Meet Pre-meeting Green Room / Lobby (等候大廳 & 履歷設定)
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <div id="meet-lobby" class="meet-lobby-screen" hidden>
+      <header class="lobby-header">
+        <a class="lobby-logo brand-home" href="/demos/embed/" aria-label="返回 IntAIview 主頁">
+          <span class="brand-word">Int<span>AI</span>view</span>
+          <span class="brand-powered">Powered by Perxona</span>
+        </a>
+        <div class="lobby-time" id="lobby-clock">12:00</div>
+      </header>
+
+      <main class="lobby-content-grid">
+        <!-- Left: Camera Preview & Audio Test -->
+        <div class="lobby-cam-section">
+          <div class="lobby-video-card">
+            <video id="lobby-webcam" playsinline muted autoplay></video>
+            <div class="lobby-video-placeholder" id="lobby-cam-placeholder" hidden>
+              <div class="cam-off-avatar" aria-hidden="true">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <span>攝影機已關閉</span>
+            </div>
+
+            <!-- Gaze Calibration Overlay -->
+            <div class="lobby-gaze-hud">
+              <span class="gaze-dot" id="lobby-gaze-dot"></span>
+              <span id="lobby-gaze-text">視訊鏡頭偵測中...</span>
+            </div>
+
+            <div class="lobby-cam-overlay-footer">
+              <span id="lobby-emotion-tag" class="status-with-dot">平靜</span>
+              <span>你 (候選人)</span>
+            </div>
+          </div>
+
+          <!-- Quick Cam/Mic Toggles in Lobby -->
+          <div class="lobby-media-controls">
+            <button id="lobby-toggle-mic" class="lobby-ctrl-btn active" type="button" title="開啟/關閉麥克風">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="22"></line>
+              </svg>
+            </button>
+            <button id="lobby-toggle-cam" class="lobby-ctrl-btn active" type="button" title="開啟/關閉攝影機">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m22 8-6 4 6 4V8Z"></path>
+                <rect width="14" height="12" x="2" y="6" rx="2" ry="2"></rect>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Multi-Source Interview Hub Card -->
+        <div class="lobby-setup-section">
+          <div class="lobby-setup-card">
+            <h2>準備加入面試</h2>
+            <p class="setup-sub">確認面試設定與裝置狀態。你的個人檔案與職缺資料已自動載入。</p>
+            <p id="lobby-service-status" class="lobby-service-status" role="status" aria-live="polite">
+              正在連線 AI 面試服務…
+            </p>
+
+            <form id="lobby-setup-form" class="lobby-form">
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="lobby-topic-select">專業領域</label>
+                  <select id="lobby-topic-select" class="meet-select">
+                    <option value="極速測試模式">快速測試</option>
+                    <option value="軟體工程與架構設計" selected>軟體工程與架構</option>
+                    <option value="創意突發情境">危機應變</option>
+                    <option value="商業分析與管理顧問">商業分析與管理顧問</option>
+                    <option value="碩士博士論文口試答辯">學術口試</option>
+                    <option value="產品經理與業務開發">產品與商業開發</option>
+                    <option value="自訂專業領域">自訂領域</option>
+                  </select>
+                </div>
+                <div class="form-group flex-1">
+                  <label for="lobby-level-select">面試級別</label>
+                  <select id="lobby-level-select" class="meet-select">
+                    <option value="Level 1 初篩">Level 1 · 初篩 · 約 8 分鐘</option>
+                    <option value="Level 2 招募經理" selected>Level 2 · 招募經理 · 約 15 分鐘</option>
+                    <option value="Level 3 小組面試">Level 3 · 小組面試 · 約 20 分鐘</option>
+                    <option value="Level 4 高階主管">Level 4 · 高階主管 · 約 15 分鐘</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="lobby-interviewer-count">面試官數量</label>
+                  <select id="lobby-interviewer-count" class="meet-select">
+                    <option value="1">1 位面試官</option>
+                    <option value="2">2 位面試官</option>
+                    <option value="3">3 位面試官</option>
+                    <option value="5">5 位面試官</option>
+                  </select>
+                </div>
+                <label class="warmup-toggle flex-1">
+                  <input id="lobby-warmup" type="checkbox" />
+                  <span><strong>暖身模式</strong><small>先練 3 題簡單題，降低正式面試焦慮</small></span>
+                </label>
+              </div>
+
+              <!-- Dedicated Custom Topic Input (Shown when custom is selected) -->
+              <div class="form-group" id="lobby-custom-topic-group" hidden>
+                <label for="lobby-custom-topic-input">自訂專業主題</label>
+                <input
+                  id="lobby-custom-topic-input"
+                  class="meet-input"
+                  type="text"
+                  placeholder="例如：AI 晶片演算法設計、區塊鏈資安架構、醫學博士口試"
+                />
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label for="lobby-role-input">應徵職位或答辯題目</label>
+                  <input
+                    id="lobby-role-input"
+                    class="meet-input"
+                    type="text"
+                    value="資深軟體工程師 (Senior Software Engineer)"
+                    placeholder="例如：Google 資深後端工程師"
+                    required
+                  />
+                </div>
+                <div class="form-group flex-1">
+                  <label for="lobby-voice-select">面試官語音</label>
+                  <select id="lobby-voice-select" class="meet-select">
+                    <option value="01M15PB616FPQACWT3WKHAV728">嚴謹沉穩 · 女性</option>
+                    <option value="01KVAGZWYB22WP19M8M5Z7SKRG">俐落明快 · 女性</option>
+                    <option value="01M15PB618DJFTREM6CVPA46Y9" selected>沉穩溫暖 · 男性</option>
+                  </select>
+                </div>
+              </div>
+
+              <details class="context-disclosure">
+                <summary>檢視面試素材 <span>履歷、職缺說明與邀請信</span></summary>
+              <div class="context-source-box">
+                <div class="context-tabs-nav">
+                  <button type="button" class="ctx-tab-btn active" data-ctx="resume">履歷與專案</button>
+                  <button type="button" class="ctx-tab-btn" data-ctx="jd">職缺說明</button>
+                  <button type="button" class="ctx-tab-btn" data-ctx="email">邀請信與筆記</button>
+                  <label class="ctx-upload-pill" title="上傳 PDF 履歷檔案">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>
+                    <span>上傳 PDF</span>
+                    <input type="file" id="pdf-file-input" accept=".pdf,.txt" style="display: none;" />
+                  </label>
+                </div>
+
+                <!-- Source 1: Resume / Highlights -->
+                <div class="ctx-pane active" id="ctx-pane-resume">
+                  <div class="form-label-row">
+                    <span class="ctx-pane-hint">可直接手動修改，或透過右上角上傳 PDF 履歷自動解析：</span>
+                    <button id="btn-clear-resume" type="button" class="btn-clean-text">清空</button>
+                  </div>
+                  <textarea
+                    id="lobby-resume-input"
+                    class="meet-input meet-textarea"
+                    rows="3"
+                    placeholder="貼上你的個人經歷、專案重點或關鍵成果..."
+                    <input type="file" id="pdf-file-input" accept=".pdf,.txt" style="display: none;" />
+                  </label>
+                </div>
+
+                <!-- Source 1: Resume / Highlights -->
+                <div class="ctx-pane active" id="ctx-pane-resume">
+                  <div class="form-label-row">
+                    <span class="ctx-pane-hint">可直接手動修改，或透過右上角上傳 PDF 履歷自動解析：</span>
+                    <button id="btn-clear-resume" type="button" class="btn-clean-text">清空</button>
+                  </div>
+                  <textarea
+                    id="lobby-resume-input"
+                    class="meet-input meet-textarea"
+                    rows="3"
+                    placeholder="貼上你的個人經歷、專案重點或關鍵成果..."
+                  >• 具備 4 年分散式後端系統開發經驗，精通 Node.js、Go 與雲原生架構。
+• 主導即時通訊核心系統重構，支撐百萬日活併發，系統可用性達 99.99%。
+• 擅長架構解耦與高壓技術決策，解決資料庫死鎖與效能瓶頸。</textarea>
+                </div>
+
+                <!-- Source 2: Job Description / Website Paste -->
+                <div class="ctx-pane" id="ctx-pane-jd">
+                  <div class="form-label-row">
+                    <span class="ctx-pane-hint">可貼上整篇徵才網站 JD、職缺要求、公司背景：</span>
+                    <button id="btn-clear-jd" type="button" class="btn-clean-text">清空</button>
+                  </div>
+                  <textarea
+                    id="lobby-jd-input"
+                    class="meet-input meet-textarea"
+                    rows="3"
+                    placeholder="例如直接複製貼上 LinkedIn / 104 / 官網徵才頁面全文..."
+                  ></textarea>
+                </div>
+
+                <!-- Source 3: Email / Note -->
+                <div class="ctx-pane" id="ctx-pane-email">
+                  <div class="form-label-row">
+                    <span class="ctx-pane-hint">可貼上面試邀請 Email 或個人想特別加強的題目備忘：</span>
+                    <button id="btn-clear-email" type="button" class="btn-clean-text">清空</button>
+                  </div>
+                  <textarea
+                    id="lobby-email-input"
+                    class="meet-input meet-textarea"
+                    rows="3"
+                    placeholder="貼上面試邀請信或特殊考核題目..."
+                  ></textarea>
+                </div>
+              </div>
+              </details>
+
+              <div class="lobby-action-row">
+                <button id="btn-test-interviewer" class="btn-test-interviewer" type="button" disabled>測試面試官語音與動作</button>
+                <button id="btn-join-meeting" class="btn-join-meeting" type="submit" disabled>加入面試</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         2. Google Meet In-Meeting Stage (面試會議室畫面)
+         ═══════════════════════════════════════════════════════════════════════ -->
+    <div id="meet-room" class="meet-viewport" hidden>
+      <!-- Main Meeting Video Grid -->
+      <main class="meet-stage-area" id="meet-stage-area">
+        <!-- Main Video Tile: 3D Avatar (Interviewer Vera) -->
+        <div class="meet-video-tile avatar-tile" id="avatar-tile">
+          <div class="tile-inner" id="stage">
+            <sv-presenter></sv-presenter>
+            <div id="fallback-interviewer" class="fallback-interviewer" aria-label="專業 AI 面試官">
+              <div class="interviewer-portrait-box" id="interviewer-portrait-container"></div>
+              <div class="interviewer-voice-halo" aria-hidden="true"></div>
+            </div>
+
+            <div id="stage-loading" class="stage-loading" aria-hidden="true">
+              <div class="loading-ring"><span>0%</span></div>
+              <p>正在準備面試空間</p>
+            </div>
+
+            <div id="stage-error" class="stage-error" hidden></div>
+
+            <div id="interviewer-panel" class="interviewer-panel" aria-label="面試評審團"></div>
+
+            <!-- Meet Name Badge (Bottom-Left) -->
+            <div class="tile-name-badge">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span id="interviewer-name-tag">Vera · 主考官</span>
+              <span id="status-pill" class="meet-status-pill">連線就緒</span>
+            </div>
+
+            <!-- Meet Floating Psychological HUD Overlay (Top-Left) -->
+            <div id="tactical-hud" class="meet-telemetry-hud">
+              <div class="hud-tele-item">
+                <span class="tele-label">眼神對視</span>
+                <strong id="hud-gaze-val">100%</strong>
+              </div>
+              <div class="hud-tele-item">
+                <span class="tele-label">自信評分</span>
+                <strong id="hud-conf-val">88</strong>
+              </div>
+              <div class="hud-tele-item">
+                <span class="tele-label">心理壓力</span>
+                <strong id="hud-stress-val">18%</strong>
+              </div>
+              <span id="hud-status-badge" class="meet-tag-badge success">專注聆聽中</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- User Self-View PIP Tile (Top-Right Google Meet Video Tile) -->
+        <div class="meet-user-pip" id="pip-camera-box">
+          <video id="user-webcam" playsinline muted autoplay></video>
+          <div class="user-pip-header">
+            <div class="pip-gaze-badge" id="pip-gaze-indicator">
+              <span class="gaze-dot" id="gaze-visual-dot"></span>
+              <span id="gaze-text-status">眼神對焦中</span>
+            </div>
+          </div>
+          <div class="user-pip-footer">
+            <span id="detected-emotion-tag" class="status-with-dot">平靜</span>
+            <span class="user-name-tag">你 (候選人)</span>
+          </div>
+        </div>
+      </main>
+
+      <!-- Google Meet Right Slide-out Sidebar -->
+      <aside class="meet-sidebar" id="meet-sidebar">
+        <!-- Sidebar Navigation Tabs -->
+        <div class="sidebar-tabs">
+          <button class="sidebar-tab active" data-tab="chat" id="tab-btn-chat" type="button">
+            <span>即時問答</span>
+          </button>
+          <button class="sidebar-tab" data-tab="resume" id="tab-btn-resume" type="button">
+            <span>履歷與職缺</span>
+          </button>
+          <button class="sidebar-tab" data-tab="telemetry" id="tab-btn-telemetry" type="button">
+            <span>心理指標</span>
+          </button>
+          <button class="sidebar-close-btn" id="btn-close-sidebar" type="button" title="收合側邊欄" aria-label="收合側邊欄"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m18 6-12 12M6 6l12 12"/></svg></button>
+        </div>
+
+        <!-- Tab 1: Chat & Transcript -->
+        <div class="sidebar-pane active" id="pane-chat">
+          <div class="chat-header-info">
+            <h3 id="sidebar-role-title">資深軟體工程師</h3>
+            <p id="sidebar-purpose-text">目標：Google 資深架構師 · Level 2 專業嚴審</p>
+            <div class="interview-progress" aria-live="polite">
+              <div class="interview-progress-row">
+                <span id="session-progress-text">準備開始</span>
+                <span id="session-state-text">AI 面試官連線中</span>
+              </div>
+              <div class="interview-progress-track" aria-hidden="true">
+                <div id="session-progress-bar" class="interview-progress-bar"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Soundwave Visualizer Overlay -->
+          <div id="siri-visualizer" class="siri-visualizer-bar" hidden>
+            <div class="siri-orb-mini recording"></div>
+            <span id="siri-transcript-preview">正在聆聽您的語音作答...</span>
+            <div class="siri-wave-bars">
+              <span class="siri-wave-bar"></span>
+              <span class="siri-wave-bar"></span>
+              <span class="siri-wave-bar"></span>
+              <span class="siri-wave-bar"></span>
+            </div>
+          </div>
+
+          <ul id="chat-log" class="chat-log"></ul>
+
+          <div class="quick-prompt-chips">
+            <button type="button" class="quick-chip" data-prompt="我有 4 年後端經驗，主要做微服務與高併發架構優化。">經歷摘要</button>
+            <button type="button" class="quick-chip" data-prompt="重構時我們將資料庫拆分，並透過 Redis 快取降低了 70% 負載。">技術決策</button>
+            <button type="button" class="quick-chip" data-prompt="面對死線，我會先與團隊溝通砍掉次要功能，確保核心流程準時上線。">危機應變</button>
+            <button type="button" class="quick-chip danger" id="btn-force-interrupt">打斷考官</button>
+          </div>
+
+          <div id="chat-retry-panel" class="chat-retry-panel" role="alert" hidden>
+            <span id="chat-retry-message">訊息未送出，你的答案已保留。</span>
+            <button id="btn-retry-message" type="button">重新送出</button>
+          </div>
+
+          <form id="chat-form" class="meet-chat-input-bar">
+            <input
+              id="chat-input"
+              class="meet-input"
+              type="text"
+              autocomplete="off"
+              placeholder="輸入回答，或使用麥克風"
+              aria-label="Message"
+            />
+            <button id="send-btn" class="meet-btn-send" type="submit" title="發送訊息">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"></line>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+              </svg>
+            </button>
+          </form>
+        </div>
+
+        <!-- Tab 2: Resume & Interview Profile Settings -->
+        <div class="sidebar-pane" id="pane-resume">
+          <div class="pane-content-scroll">
+            <div class="pane-header-row">
+              <div>
+                <h3>履歷與職缺管理</h3>
+                <p class="pane-sub">隨時自由增刪履歷、貼上職缺網頁或上傳 PDF 檔案。</p>
+              </div>
+              <label class="ctx-upload-pill" title="上傳 PDF 履歷">
+                <span>上傳 PDF</span>
+                <input type="file" id="sidebar-pdf-input" accept=".pdf,.txt" style="display: none;" />
+              </label>
+            </div>
+
+            <form id="sidebar-resume-form" class="sidebar-form">
+              <div class="form-group">
+                <label for="setup-role-input">應徵職位 / 題目：</label>
+                <input
+                  id="setup-role-input"
+                  class="meet-input"
+                  type="text"
+                  value="資深軟體工程師 (Senior Software Engineer)"
+                  placeholder="例如：Google 資深後端工程師"
+                  required
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="setup-level-select">高壓難度等級：</label>
+                <select id="setup-level-select" class="meet-select">
+                  <option value="Level 1 初篩">Level 1 · HR 初篩</option>
+                  <option value="Level 2 招募經理" selected>Level 2 · 招募經理</option>
+                  <option value="Level 3 小組面試">Level 3 · 小組面試</option>
+                  <option value="Level 4 高階主管">Level 4 · 高階主管</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="setup-resume-input">履歷經歷 / 專案亮點全文：</label>
+                <textarea
+                  id="setup-resume-input"
+                  class="meet-input meet-textarea"
+                  rows="4"
+                  placeholder="可貼上簡短履歷、專案重點或關鍵成就"
+                >• 具備 4 年分散式後端系統開發經驗，精通 Node.js、Go 與雲原生架構。
+• 主導即時通訊核心系統重構，支撐百萬日活併發，系統可用性達 99.99%。
+• 擅長架構解耦與高壓技術決策，解決資料庫死鎖與效能瓶頸。</textarea>
+              </div>
+
+              <div class="form-group">
+                <label for="setup-jd-input">職缺要求 JD / 徵才網頁全文：</label>
+                <textarea
+                  id="setup-jd-input"
+                  class="meet-input meet-textarea"
+                  rows="3"
+                  placeholder="可貼上 Job Description 或徵才網站全文..."
+                ></textarea>
+              </div>
+
+              <button class="meet-pill-action active full-width" type="submit">
+                套用並重新開始
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Tab 3: Real-time Telemetry & Diagnostics -->
+        <div class="sidebar-pane" id="pane-telemetry">
+          <div class="pane-content-scroll">
+            <h3>即時練習指標</h3>
+            <p class="pane-sub">以鏡頭中的眼神、頭部穩定度與表情訊號提供練習回饋；這不是心理或醫療判定。</p>
+
+            <div class="telemetry-cards-grid">
+              <div class="tele-card">
+                <span class="tele-card-title">眼神對視率</span>
+                <strong id="tele-gaze-score">100%</strong>
+                <p>螢幕角度垂直校準 + EMA 平滑濾波</p>
+              </div>
+              <div class="tele-card">
+                <span class="tele-card-title">表達穩定度</span>
+                <strong id="tele-conf-score">88 / 100</strong>
+                <p>基於頭部穩定度、眼神直視與微表情</p>
+              </div>
+              <div class="tele-card">
+                <span class="tele-card-title">緊張訊號</span>
+                <strong id="tele-stress-score">18%</strong>
+                <p>即時捕捉抿嘴、眨眼頻率與焦慮</p>
+              </div>
+            </div>
+
+            <div class="tele-box">
+              <h4>練習原則</h4>
+              <ul class="tele-list">
+                <li>直視鏡頭/考官眉心，避免思考時視線向上或低頭。</li>
+                <li>開口前先給出結論（Bottom-Line Up Front）。</li>
+                <li>被考官打斷時保持冷靜，不推翻原本合理依據。</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <!-- ── Google Meet Bottom Call Control Bar ─────────────────────────────── -->
+    <footer id="meet-bottom-bar" class="meet-bottom-bar" hidden>
+      <!-- Left: Meeting Metadata Info -->
+      <div class="meet-bar-left">
+        <a class="brand-lockup brand-home" href="/demos/embed/" aria-label="返回 IntAIview 主頁"><span class="brand-word brand-word-small">Int<span>AI</span>view</span><span class="brand-powered">Powered by Perxona</span></a>
+        <div class="meet-info-text">
+          <span class="meet-call-title" id="bar-call-title">IntAIview · Interview room</span>
+          <span class="meet-call-time" id="meet-timer">00:00</span>
+        </div>
+      </div>
+
+      <!-- Center: Main Conference Control Buttons -->
+      <div class="meet-bar-center">
+        <!-- Microphone Voice Chat Toggle -->
+        <button id="voice-chat-btn" class="meet-ctrl-btn" type="button" title="麥克風語音作答 (點擊開啟/結束)">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="22"></line>
+          </svg>
+        </button>
+
+        <!-- Camera Video Toggle -->
+        <button id="btn-camera-toggle" class="meet-ctrl-btn active" type="button" title="開電視訊攝影機與眼神感知">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m22 8-6 4 6 4V8Z"></path>
+            <rect width="14" height="12" x="2" y="6" rx="2" ry="2"></rect>
+          </svg>
+        </button>
+
+        <!-- Fullscreen Toggle -->
+        <button id="btn-toggle-fullscreen" class="meet-ctrl-btn" type="button" title="全螢幕模式">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 3 21 3 21 9"></polyline>
+            <polyline points="9 21 3 21 3 15"></polyline>
+            <line x1="21" y1="3" x2="14" y2="10"></line>
+            <line x1="3" y1="21" x2="10" y2="14"></line>
+          </svg>
+        </button>
+
+        <!-- End Interview Call Button (Red Pill Button) -->
+        <button id="btn-end-interview" class="meet-end-call-btn" type="button" title="結束面試並產出診斷復盤報告">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7 2 2 0 0 1 1.72 2v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.33-2.67m-2.67-3.34a19.79 19.79 0 0 1-3.07-8.63A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91"></path>
+            <line x1="23" y1="1" x2="1" y2="23"></line>
+          </svg>
+          <span>結束面試</span>
+        </button>
+      </div>
+
+      <!-- Right: Sidebar Toggle Controls -->
+      <div class="meet-bar-right">
+        <!-- Return to Lobby / Setup Tab -->
+        <button id="btn-open-setup" class="meet-ctrl-btn" type="button" title="修改面試主題與履歷">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+          </svg>
+        </button>
+
+        <!-- Customizer Modal Button -->
+        <button id="btn-open-customizer" class="meet-ctrl-btn" type="button" title="更換角色與語音">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+
+        <!-- Toggle Sidebar Button -->
+        <button id="btn-toggle-sidebar" class="meet-ctrl-btn active" type="button" title="開啟/收合對話側邊欄">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </button>
+      </div>
+    </footer>
+
+    <!-- ── Post-Interview Diagnostic & Line-by-line Grading Modal ───────── -->
+    <div id="report-modal" class="apple-modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="apple-modal-content report-modal-content">
+        <div class="modal-header">
+          <div>
+            <h2>面試練習報告</h2>
+            <p class="modal-sub">包含綜合能力評分、眼神微表情指標與逐字稿精修建議</p>
+          </div>
+          <button id="btn-close-report" class="btn-close" type="button" aria-label="關閉報告"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m18 6-12 12M6 6l12 12"/></svg></button>
+        </div>
+
+        <div class="modal-body report-modal-body">
+          <div class="report-score-hero">
+            <div class="grade-badge" id="rep-grade">A</div>
+            <div>
+              <h3 id="rep-grade-title">優秀通過 (Strong Performance)</h3>
+              <p id="rep-duration">面試模擬時長: 3 分鐘 | 破綻打斷次數: 0 次</p>
+            </div>
+          </div>
+
+          <div class="report-stats-grid">
+            <div class="stat-card">
+              <span class="stat-title">平均眼神對視率</span>
+              <strong id="rep-gaze">88%</strong>
+              <div class="stat-bar-bg"><div class="stat-bar-fill" id="rep-gaze-bar" style="width: 88%"></div></div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">表達穩定度</span>
+              <strong id="rep-conf">82 / 100</strong>
+              <div class="stat-bar-bg"><div class="stat-bar-fill" id="rep-conf-bar" style="width: 82%"></div></div>
+            </div>
+            <div class="stat-card">
+              <span class="stat-title">平均緊張訊號</span>
+              <strong id="rep-stress">24%</strong>
+              <div class="stat-bar-bg"><div class="stat-bar-fill warning" id="rep-stress-bar" style="width: 24%"></div></div>
+            </div>
+          </div>
+
+          <div class="report-section">
+            <h4>六維能力雷達</h4>
+            <div id="report-radar" class="report-radar" aria-label="表達能力、專業度、反應速度、邏輯性、肢體語言與情緒穩定度"></div>
+          </div>
+
+          <!-- Line-by-line Transcript & Assessment -->
+          <div class="report-section">
+            <h4>逐句作答評分與教練建議</h4>
+            <div class="transcript-assessment-list" id="rep-line-by-line-list"></div>
+          </div>
+
+          <div class="report-section">
+            <h4>亮點與優勢</h4>
+            <ul id="rep-strengths" class="report-list"></ul>
+          </div>
+
+          <div class="report-section">
+            <h4>下一次練習建議</h4>
+            <ul id="rep-suggestions" class="report-list"></ul>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button id="btn-export-excel" class="meet-pill-action" type="button">
+            匯出 Excel 報告
+          </button>
+          <button id="btn-practice-again" class="meet-pill-action" type="button">
+            再練一次相同職位
+          </button>
+          <button id="btn-restart-interview" class="meet-pill-action active" type="button">
+            調整面試設定
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Customizer Modal ─────────────────────────────────────────────────── -->
+    <div id="customizer-modal" class="apple-modal-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+      <div class="apple-modal-content">
+        <div class="modal-header">
+          <div>
+            <h2>自訂 3D Avatar 角色與聲音</h2>
+            <p class="modal-sub">自由挑選不同外觀、場景與台灣繁中語音</p>
+          </div>
+          <button id="btn-close-modal" class="btn-close" type="button" aria-label="關閉設定"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m18 6-12 12M6 6l12 12"/></svg></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="apple-segmented">
+            <button class="apple-segment-tab active" data-tab="avatars" type="button">角色外觀</button>
+            <button class="apple-segment-tab" data-tab="voices" type="button">語音音色</button>
+            <button class="apple-segment-tab" data-tab="scenes" type="button">虛擬場景</button>
+          </div>
+
+          <div id="tab-avatars" class="tab-pane active">
+            <div class="apple-grid" id="avatars-grid"></div>
+          </div>
+
+          <div id="tab-voices" class="tab-pane">
+            <div class="apple-grid" id="voices-grid"></div>
+          </div>
+
+          <div id="tab-scenes" class="tab-pane">
+            <div class="apple-grid" id="scenes-grid"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <span id="current-selection-label" class="selection-summary">目前選擇: 薇拉 (俐落女聲)</span>
+          <button id="btn-apply-customizer" class="meet-pill-action active" type="button">
+            套用並載入
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="app.js"></script>
+    <script type="module" src="workflow.js"></script>
+  </body>
+</html>

@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Practice high-pressure interviews with Vera, an AI interviewer that adapts to your role, résumé, delivery, and body language."
+    />
+    <title>IntAIview · AI Interview Practice</title>
+    <link rel="stylesheet" href="styles/apple-theme.css" />
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #1c1c1e;
+        color: var(--apple-text-primary);
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.5rem;
+      }
+      .hub-card {
+        width: min(780px, 100%);
+        border: 1px solid #2e2e30;
+        border-radius: 10px;
+        background: #242426;
+        padding: clamp(2rem, 5vw, 3.5rem);
+      }
+      .hub-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      .hub-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.76rem;
+        font-weight: 600;
+        padding: 5px 14px;
+        border-radius: 6px;
+        background: transparent;
+        color: #8e8e93;
+        border: 1px solid #3a3a3c;
+        margin-bottom: 1rem;
+      }
+      .hub-header h1 {
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        margin: 0 0 0.8rem;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+      .hub-header p {
+        color: var(--apple-text-secondary);
+        font-size: 1.05rem;
+        max-width: 50ch;
+        margin: 0 auto;
+        line-height: 1.6;
+      }
+      .demo-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+      }
+      .demo-card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 1.8rem;
+        border-radius: 10px;
+        background: #202022;
+        border: 1px solid #2e2e30;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.3s var(--apple-spring);
+      }
+      .demo-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        transform: none;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+      .demo-card.featured {
+        background: #242426;
+        border-color: #3a3a3c;
+      }
+      .demo-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .demo-tag {
+        font-size: 0.68rem;
+        font-weight: 600;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: #4a7cff;
+        color: #fff;
+      }
+      .demo-desc {
+        color: var(--apple-text-secondary);
+        font-size: 0.88rem;
+        line-height: 1.55;
+        margin: 0 0 1.5rem;
+      }
+      .demo-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.86rem;
+        font-weight: 600;
+        color: #5ac8fa;
+      }
+      @media (max-width: 650px) {
+        .demo-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="hub-card apple-glass">
+      <div class="hub-header">
+        <div class="hub-badge">Powered by Perxona</div>
+        <div style="font-size:26px;font-weight:600;letter-spacing:-0.04em;margin-bottom:18px;color:#fff">Int<span style="color:#4a7cff">AI</span>view</div>
+        <h1>Practice the pressure<br />before it counts.</h1>
+        <p>薇拉會根據你的職位、履歷與 JD 即時追問，同時分析眼神、情緒與回答結構，讓每一次練習都更接近真正的面試。</p>
+      </div>
+
+      <div class="demo-grid">
+        <a href="demos/embed/" class="demo-card featured">
+          <div>
+            <div class="demo-title">
+              面試練習
+              <span class="demo-tag">開始練習</span>
+            </div>
+            <p class="demo-desc">
+              上傳履歷、貼上職缺 JD，選擇面試難度。透過語音與 3D AI 面試官即時對答，並取得眼神、自信、壓力與逐題回答診斷。
+            </p>
+          </div>
+          <span class="demo-action">進入面試等候室</span>
+        </a>
+
+        <a href="demos/studio/" class="demo-card">
+          <div>
+            <div class="demo-title">
+              Interview Engine Studio
+              <span class="demo-tag" style="background: rgba(255,255,255,0.15)">團隊工具</span>
+            </div>
+            <p class="demo-desc">
+              管理 AI 面試官、知識庫與角色設定，測試語音、動作和問答流程，並檢視 Presenter SDK 的即時事件。
+            </p>
+          </div>
+          <span class="demo-action">開啟開發控制台</span>
+        </a>
+      </div>
+    </div>
+  </body>
+</html>
