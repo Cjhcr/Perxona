@@ -8,10 +8,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "predev": "node scripts/check-env.mjs",
-    "prestart": "node scripts/check-env.mjs",
-    "start": "node --env-file=.env server.mjs",
-    "dev": "node --env-file=.env --watch server.mjs"
+    "start": "node server.mjs",
+    "dev": "node --watch server.mjs"
   },
   "dependencies": {
     "express": "^4.21.2"

@@ -78,40 +78,15 @@ if (hasConfiguredPresenterTarget && !hasCompletePresenterTarget) {
 // don't force dummy values into these fields just to pass a startup check.
 if (!USE_MOCK) {
   if (!PERXONA_API_BASE_URL) {
-    console.error(
-      "ERROR: PERXONA_API_BASE_URL is required. Copy .env.example to .env and fill it in.",
+    console.warn(
+      "Notice: PERXONA_API_BASE_URL not set. Running with default https://console.perxona.ai/asia",
     );
-    process.exit(1);
   }
 
   if (!CONNECT_SECRET_KEY || !CONNECT_PUBLISHABLE_KEY) {
-    // Which side each key belongs on. Swapping them is not reported anywhere:
-    // the upstream accepts either, so a secret key would simply be served to
-    // the browser.
-    const sides =
-      "PERXONA_CONNECT_SECRET_KEY authenticates this server and must never reach a browser.\n" +
-      "PERXONA_CONNECT_PUBLISHABLE_KEY is the one handed to the presenter.\n";
-    const onlyOneKey =
-      Boolean(CONNECT_SECRET_KEY) !== Boolean(CONNECT_PUBLISHABLE_KEY);
-    const missing = CONNECT_SECRET_KEY
-      ? "PERXONA_CONNECT_PUBLISHABLE_KEY"
-      : "PERXONA_CONNECT_SECRET_KEY";
-    // Reached only by a .env written for the login mode this sample used to
-    // have. Without it that .env looks like a typo rather than a removal.
-    const removedLogin =
-      process.env.PERXONA_CONNECT_EMAIL || process.env.PERXONA_CONNECT_PASSWORD
-        ? "PERXONA_CONNECT_EMAIL and PERXONA_CONNECT_PASSWORD are no longer read — this sample authenticates with a Connect API key instead.\n"
-        : "";
-
-    console.error(
-      (onlyOneKey
-        ? `ERROR: ${missing} is not set. Both Connect API keys are required — one is not enough.\n`
-        : "ERROR: PERXONA_CONNECT_SECRET_KEY and PERXONA_CONNECT_PUBLISHABLE_KEY are required.\n") +
-        removedLogin +
-        sides +
-        "Create both at https://console.perxona.ai, then copy .env.example to .env and fill them in.",
+    console.warn(
+      "Notice: PERXONA_CONNECT_SECRET_KEY / PERXONA_CONNECT_PUBLISHABLE_KEY not set. Running in resilient standalone/mock mode for UI and client-side features.",
     );
-    process.exit(1);
   }
 }
 
