@@ -3,7 +3,8 @@ import express from "express";
 // ── Config ──────────────────────────────────────────────────
 
 const PORT = process.env.PORT || 8083;
-const PERXONA_API_BASE_URL = process.env.PERXONA_API_BASE_URL;
+const PERXONA_API_BASE_URL =
+  process.env.PERXONA_API_BASE_URL || "https://console.perxona.ai/asia";
 // Only the /asia or /eu region segment is read out of PERXONA_API_BASE_URL —
 // the host is always the public console, never whatever host
 // PERXONA_API_BASE_URL itself points at. GET /api/config is unauthenticated
